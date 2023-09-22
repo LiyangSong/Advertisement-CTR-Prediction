@@ -1,0 +1,29 @@
+# Data file
+data/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+out/
+.idea_modules/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Windows
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Envrionmental Variables
+*.env
+*.env.development
+
