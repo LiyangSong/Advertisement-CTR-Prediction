@@ -4,15 +4,17 @@
 
 ##### 1. Define the objective in business terms.
 
-The goal is to increase the accuracy of targeted advertising so that the rate of return on advertising can be maximized and the cost of advertising can be minimized. In order to reach this goal, we will try to find the best model for the CTR (Click-Through Rate) prediction.
+- The goal is to increase the efficiency of targeted advertising by accurately predicting the likelihood of a user clicking on an advertisement, enabling improved return on investment (ROI) and lower cost on advertising. In order to reach this goal, we will try to find the best model for the `CTR (Click-Through Rate)` prediction. 
+
+- CTR is a ratio showing how often people who see ads or free product listing end up clicking it. CTR is the number of clicks that an ad receives divided by the number of times the ad is shown: `clicks ÷ impressions = CTR`. For example, if one ad had 5 clicks and 100 impressions, then the CTR would be 5%.
 
 ##### 2. How will your solution be used?
 
-In this project, we want to analyze the advertising system and improve the effectiveness of advertisements with the use of 2020 DIGIX Advertisement CTR Prediction Dataset. The aim of our project is to build a model that improve Advertising CTR prediction. The model will be used to identify which types of customers are more likely to check ad contents.
+In this project, we want to use 2020 DIGIX Advertisement CTR Prediction dataset to build a model that improves advertising CTR prediction. The model can be integrated into the advertising serving system and will be used to predict the likelihood of a click for each available ad. And the system can then choose to display ad with the highest predicted CTR to the user, thereby potentially maximizing the actual clicks and revenue.
 
 ##### 3. How should performance be measured?
 
-Because the model we built predicts whether a customer will click on an advertisement or product or not, this is a classification model (target value - 0 or 1). For classification problems, there are six major performance metrics:
+Because our model predicts whether a customer will click for an advertisement or product or not, this is a classification model (target value - 0 or 1). For classification problems, we would consider using ones from the major performance metrics:
 
 - **Accuracy**: (Number of correct predictions)/(Total number of predictions)
 
@@ -28,9 +30,9 @@ Because the model we built predicts whether a customer will click on an advertis
 
 ##### 4. Is the performance measure aligned with the business objective?
 
-- **Accuracy**: Accuracy indicates how well the model predicts all of the labels correctly.A high accuracy rate could be a sign for good models when the dataset is balanced.
+- **Accuracy**: Accuracy indicates how well the model predicts all the labels correctly.A high accuracy rate could be a sign for good models when the dataset is balanced.
 
-- **Confusion Matri**x: Confusion matrix identifies classes being predicted correctly/incorrectly and types of errors being made.
+- **Confusion Matrix**: Confusion matrix identifies classes being predicted correctly/incorrectly and types of errors being made.
 
 - **Precision**: Precision is important for checking the correctness of the model. A precision score closer to 1 indicates that the model produces less false positive errors.
 
