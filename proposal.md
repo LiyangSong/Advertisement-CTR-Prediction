@@ -4,23 +4,45 @@
 
 ##### 1. Define the objective in business terms.
 
-TODO by Qian
+The goal is to increase the accuracy of targeted advertising so that the rate of return on advertising can be maximized and the cost of advertising can be minimized. In order to reach this goal, we will try to find the best model for the CTR (Click-Through Rate) prediction.
 
 ##### 2. How will your solution be used?
 
-TODO by Qian
+In this project, we want to analyze the advertising system and improve the effectiveness of advertisements with the use of 2020 DIGIX Advertisement CTR Prediction Dataset. The aim of our project is to build a model that improve Advertising CTR prediction. The model will be used to identify which types of customers are more likely to check ad contents.
 
 ##### 3. How should performance be measured?
 
-TODO by Qian
+Because the model we built predicts whether a customer will click on an advertisement or product or not, this is a classification model (target value - 0 or 1). For classification problems, there are six major performance metrics:
+
+- Accuracy:(Number of correct predictions)/(Total number of predictions)
+
+- Confusion Matrix:A table with two dimensions (Actual and Predicted) and four terms (True Positives, True Negatives, False Positives, and False Negatives)
+
+- Precision:(True Positives)/(True Positives + False Positives)
+
+- Recall:(True Positives)/(True Positives + False Negatives)
+
+- F1-Score:the harmonic mean of both Precision and Recall
+
+- AUC(Area Under the Curve)-ROC:the two-dimensional area under the entire ROC(curve plotted between True Positive Rate and False Positive Rate)
 
 ##### 4. Is the performance measure aligned with the business objective?
 
-TODO by Qian
+- Accuracy: Accuracy indicates how well the model predicts all of the labels correctly.A high accuracy rate could be a sign for good models when the dataset is balanced.
+
+- Confusion Matrix:Confusion matrix identifies classes being predicted correctly/incorrectly and types of errors being made.
+
+- Precision: Precision is important for checking the correctness of the model. A precision score closer to 1 indicates that the model produces less false positive errors.
+
+- Recall: Recall is important for reducing the number of false negatives. A recall score closer to 1 indicates that the model is minimizing the false negative errors.
+
+- F1-Score:F1-Score optimizes precision and recall. When the value of F1 is close to 1, the model is performing well in terms of both precision and recall.
+
+- AUC(Area Under the Curve)-ROC:The AUC-ROC curve is used to visualize the performance of classification models.The higher the AUC, the better the performance of the model.
 
 ##### 5. What would be the minimum performance needed to reach the business objective?
 
-TODO by Qian
+At the current step, the minimum performance needed to reach the business objective is unclear. It depends on what the company is seeking for and what specific goal the company sets as a priority. In general, a Click-Through Rate higher than the current one is the minimum performance requirement.
 
 ##### 6. List the assumptions you have made so far.
 
