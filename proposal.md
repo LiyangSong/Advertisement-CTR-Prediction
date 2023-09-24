@@ -14,31 +14,31 @@ In this project, we want to analyze the advertising system and improve the effec
 
 Because the model we built predicts whether a customer will click on an advertisement or product or not, this is a classification model (target value - 0 or 1). For classification problems, there are six major performance metrics:
 
-- Accuracy:(Number of correct predictions)/(Total number of predictions)
+- **Accuracy**: (Number of correct predictions)/(Total number of predictions)
 
-- Confusion Matrix:A table with two dimensions (Actual and Predicted) and four terms (True Positives, True Negatives, False Positives, and False Negatives)
+- **Confusion Matrix**: A table with two dimensions (Actual and Predicted) and four terms (True Positives, True Negatives, False Positives, and False Negatives)
 
-- Precision:(True Positives)/(True Positives + False Positives)
+- **Precision**: (True Positives)/(True Positives + False Positives)
 
-- Recall:(True Positives)/(True Positives + False Negatives)
+- **Recall**: (True Positives)/(True Positives + False Negatives)
 
-- F1-Score:the harmonic mean of both Precision and Recall
+- **F1-Score**: the harmonic mean of both Precision and Recall
 
-- AUC(Area Under the Curve)-ROC:the two-dimensional area under the entire ROC(curve plotted between True Positive Rate and False Positive Rate)
+- **AUC(Area Under the Curve)-ROC**: the two-dimensional area under the entire ROC(curve plotted between True Positive Rate and False Positive Rate)
 
 ##### 4. Is the performance measure aligned with the business objective?
 
-- Accuracy: Accuracy indicates how well the model predicts all of the labels correctly.A high accuracy rate could be a sign for good models when the dataset is balanced.
+- **Accuracy**: Accuracy indicates how well the model predicts all of the labels correctly.A high accuracy rate could be a sign for good models when the dataset is balanced.
 
-- Confusion Matrix:Confusion matrix identifies classes being predicted correctly/incorrectly and types of errors being made.
+- **Confusion Matri**x: Confusion matrix identifies classes being predicted correctly/incorrectly and types of errors being made.
 
-- Precision: Precision is important for checking the correctness of the model. A precision score closer to 1 indicates that the model produces less false positive errors.
+- **Precision**: Precision is important for checking the correctness of the model. A precision score closer to 1 indicates that the model produces less false positive errors.
 
-- Recall: Recall is important for reducing the number of false negatives. A recall score closer to 1 indicates that the model is minimizing the false negative errors.
+- **Recall**: Recall is important for reducing the number of false negatives. A recall score closer to 1 indicates that the model is minimizing the false negative errors.
 
-- F1-Score:F1-Score optimizes precision and recall. When the value of F1 is close to 1, the model is performing well in terms of both precision and recall.
+- **F1-Score**: F1-Score optimizes precision and recall. When the value of F1 is close to 1, the model is performing well in terms of both precision and recall.
 
-- AUC(Area Under the Curve)-ROC:The AUC-ROC curve is used to visualize the performance of classification models.The higher the AUC, the better the performance of the model.
+- **AUC(Area Under the Curve)-ROC**: The AUC-ROC curve is used to visualize the performance of classification models.The higher the AUC, the better the performance of the model.
 
 ##### 5. What would be the minimum performance needed to reach the business objective?
 
