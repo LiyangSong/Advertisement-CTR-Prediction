@@ -71,6 +71,7 @@ At the current step, the minimum performance needed to reach the business object
 ##### 1. Find and document where you got the data.
 
 - Data Set: https://www.kaggle.com/datasets/louischen7/2020-digix-advertisement-ctr-prediction
+
 - The dataset contains advertising behavior data collected from seven consecutive days. Detailed data field descriptions: `data_fields.json`
 
 ##### 2. Get the data.
@@ -86,6 +87,9 @@ At the current step, the minimum performance needed to reach the business object
 ##### 4. Sample a test set, put it aside, and never look at it to avoid data leakage through the data scientist.
 
 - The train and test set split has completed using `train_test_split.ipynb` with a test size fraction of 0.2.
+
+- The dataset is heavily imbalanced with over 95% zero values in `'label'` column, this will introduce a risk that the minority class might not be adequately represented in either the training set or the test set (or both). This can lead to models that are poorly generalized or validated. To counteract this, **stratified sampling** is applied.
+
 - Users can reproduce the split process by rerun the `train_test_split.ipynb`, but we will recommend downloading the split train and test data sets using `download_data.ipynb` for better performance.
 
 
