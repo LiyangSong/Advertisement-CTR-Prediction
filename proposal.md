@@ -22,9 +22,9 @@ Because the model we built predicts whether a customer will click on an advertis
 
 - **Recall**: (True Positives)/(True Positives + False Negatives)
 
-- **F1-Score**: the harmonic mean of both Precision and Recall
+- **F1-Score**: The harmonic mean of both Precision and Recall
 
-- **AUC(Area Under the Curve)-ROC**: the two-dimensional area under the entire ROC(curve plotted between True Positive Rate and False Positive Rate)
+- **AUC(Area Under the Curve)-ROC**: The two-dimensional area under the entire ROC(curve plotted between True Positive Rate and False Positive Rate)
 
 ##### 4. Is the performance measure aligned with the business objective?
 
@@ -46,23 +46,23 @@ At the current step, the minimum performance needed to reach the business object
 
 ##### 6. List the assumptions you have made so far.
 
-- Data is representative: the provided dataset is representative of the overall user base and ad base, and the sampling method of ads is random and no sampling bias. This will make sure the trained model can generalize well to unseen real-world data.
+- **Data is representative**: The provided dataset is representative of the overall user base and ad base, and the sampling method of ads is random and no sampling bias. This will make sure the trained model can generalize well to unseen real-world data.
 
-- Data is relevant: features in the dataset have predictive power for CTR, and not too many irrelevant ones are included. Irrelevant features can introduce noise to the model and impact the prediction power.
+- **Data is relevant**: Features in the dataset have predictive power for CTR, and not too many irrelevant ones are included. Irrelevant features can introduce noise to the model and impact the prediction power.
 
-- Data is good-quality: not too many outliers or missing values. Poor quality data can make system difficult to detect underlying patterns, and make trained model perform unpredictably in production.
+- **Data is good-quality**: Not too many outliers or missing values. Poor quality data can make system difficult to detect underlying patterns, and make trained model perform unpredictably in production.
 
-- External factors is constant: external factors that may generate impact on CTR remain constant over time. The model's performance may degrade overtime if external factors are considered constant during training, but actually change over time. 
+- **External factors is constant**: External factors that may generate impacts on CTR remain constant over time. The model's performance may degrade overtime if external factors are considered constant during training, but actually change over time. 
 
 ##### 7. Verify assumptions if possible.
 
-- Data is representative: can be verified by comparing dataset with broader business data. However, it is out of our reach in this project.
+- **Data is representative**: Can be verified by comparing dataset with broader business data. However, it is out of our reach in this project.
 
-- Data is relevant: can be verified by correlation measurement or feature selection methods, which will be done in EDA phase.
+- **Data is relevant**: Can be verified by correlation measurement or feature selection methods, which will be done in EDA phase.
 
-- Data is good-quality: box plots can be used to identify outliers; missing values can be calculated as percentages for each feature, which will be done in EDA phase.
+- **Data is good-quality**: Box plots can be used to identify outliers; missing values can be calculated as percentages for each feature, which will be done in EDA phase.
 
-- External factors is constant: As the dataset contain only 7 consecutive days, it is hard to verify external factors' change without additional data. It can also be validated through monitoring the model's performance after deploying in production.
+- **External factors is constant**: As the dataset contain only 7 consecutive days, it is hard to verify external factors' change without additional data. It can also be validated through monitoring the model's performance after deploying in production.
 
 ### II. Get the Data
 
