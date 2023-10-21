@@ -8,7 +8,7 @@ def sample_data(df, fraction, random_state=42):
     return sample_df
 
 
-def split_train_test_df(df, target, prefix='', stratify=False, test_size=0.2, random_state=42):
+def split_train_test_df(df, target, stratify=False, test_size=0.2, random_state=42):
     print("Split DataFrame into train and test set:")
 
     cap_x_df, y_df = df.drop(target, axis=1), df[[target]]
