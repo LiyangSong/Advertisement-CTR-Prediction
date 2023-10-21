@@ -25,7 +25,7 @@ def unzip_file(source_path, target_folder):
 
 
 def read_csv(csv_path, sep=","):
-    print("Read CSV file {csv_path} into DataFrame: \n")
+    print(f"Read CSV file {csv_path} into DataFrame: \n")
     df = pd.read_csv(csv_path, sep=sep)
     print(f"df.head: \n{df.head}")
     print(f"df.shape: {df.shape}")

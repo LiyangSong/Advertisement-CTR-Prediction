@@ -1,4 +1,3 @@
-from general_utils import save_to_csv
 from sklearn.model_selection import train_test_split
 
 
@@ -30,8 +29,4 @@ def split_train_test_df(df, target, prefix='', stratify=False, test_size=0.2, ra
         print(f"target distribution in train set: \n {train_y_df.value_counts(normalize=True)}")
         print(f"target distribution in test set: \n {test_y_df.value_counts(normalize=True)}")
 
-    save_to_csv(train_cap_x_df, train_y_df, prefix + "train_df.csv")
-    save_to_csv(test_cap_x_df, test_y_df, prefix + "test_df.csv")
-
-    del test_cap_x_df, test_y_df
-    return train_cap_x_df, train_y_df
+    return train_cap_x_df, train_y_df, test_cap_x_df, test_y_df
