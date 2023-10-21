@@ -2,14 +2,14 @@ from sklearn.model_selection import train_test_split
 
 
 def sample_data(df, fraction, random_state=42):
-    print(f"Sample {fraction} fraction from DataFrame: \n")
+    print(f"\nSample {fraction} fraction from DataFrame:")
     sample_df = df.groupby("label").apply(lambda x: x.sample(frac=fraction, random_state=random_state))
     print(f"sample_df.shape: {sample_df.shape}")
     return sample_df
 
 
 def split_train_test_df(df, target, stratify=False, test_size=0.2, random_state=42):
-    print("Split DataFrame into train and test set:")
+    print("\nSplit DataFrame into train and test set:")
 
     cap_x_df, y_df = df.drop(target, axis=1), df[[target]]
     stratify = df[target] if stratify else None
