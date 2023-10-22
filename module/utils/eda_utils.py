@@ -156,5 +156,8 @@ def outlier_nominal(df, nominal_attr_list):
     return 0
     
 def corr_target(df, target, numerical_attr_list):
-    result = df[numerical_attr_list].corrwith(df[target])
-    return result
+    corr_tar = df[numerical_attr_list].corrwith(df[target])
+    var_attr = np.var(df[numerical_attr_list]).astype(int)
+    result_df = pd.concat([corr_tar, var_attr], axis = 1)
+    result_df = result_df.rename(columns={0: "Correlation", 1: "Variance"})
+    return result_df
