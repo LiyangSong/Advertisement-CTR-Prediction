@@ -1,7 +1,9 @@
 from IPython.core.display_functions import display
 import matplotlib.pyplot as plt
+import seaborn as sns
 import missingno as msno
 import pandas as pd
+import numpy as np
 
 
 def check_out_general_info(df):
@@ -124,3 +126,35 @@ def hist_plot_for_numerical(df, numerical_attr_list):
     df[numerical_attr_list].hist(figsize=(16, 16))
     plt.tight_layout()
     plt.show()
+
+def basic_stats(df, numerical_attr_list):
+    basic_info = df[numerical_attr_list].describe().astype(int)
+    display(basic_info)
+
+def corr_attr(df, numerical_attr_list):
+    result = df[numerical_attr_list].corr()
+    corr_df = (
+        result.where(
+            np.triu(np.ones(result.shape), k=1)
+            .astype(bool)
+        )
+        .stack()
+        .to_frame(name='correlation')
+    )
+
+    new_index = [i + ' with ' + j for i, j in corr_df.index]
+    corr_df.index = new_index
+    corr_df = corr_df.sort_values('correlation', ascending=False)
+    sns.heatmap(result)
+    plt.show()
+    return corr_df
+
+def cardinality_nominal(df, nominal_attr_list):
+    return 0
+
+def outlier_nominal(df, nominal_attr_list):
+    return 0
+    
+def corr_target(df, target, numerical_attr_list):
+    result = df[numerical_attr_list].corrwith(df[target])
+    return result
