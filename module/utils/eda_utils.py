@@ -1,4 +1,7 @@
 from IPython.core.display_functions import display
+import matplotlib.pyplot as plt
+import missingno as msno
+import pandas as pd
 
 
 def check_out_general_info(df):
@@ -34,6 +37,26 @@ def check_out_duplicate_obs(df):
         print("No duplicate observations observed in data set.")
 
 
+def check_out_missingness(df, sample_size_threshold=250):
+    print("\nCheck out missingness:")
+    if df.isna().sum().sum() > 0:
+        print("Caution: found missing values in data set!!!")
+        print("Use missingno to understand pattern of missingness:")
+
+        sample_size = df.shape[0] if df.shape[0] < sample_size_threshold else sample_size_threshold
+        print(f"df.shape[0]: {df.shape[0]}")
+        print(f"missingno sample_size: {sample_size}")
+
+        msno.matrix(df.sample(sample_size, random_state=42))
+        plt.title("Matrix visualizing nullity of DataFrame")
+        plt.show()
+        msno.heatmap(df.sample(sample_size, random_state=42))
+        plt.title("Heatmap visualizing nullity of DataFrame")
+        plt.show()
+    else:
+        print("No missing values in data set.")
+
+
 def split_numerical_nominal_attr(df, target):
     print("\nSplit nominal and numerical attr:")
 
@@ -45,3 +68,59 @@ def split_numerical_nominal_attr(df, target):
     print(f"nominal_attr_list: \n{nominal_attr_list}")
 
     return numerical_attr_list, nominal_attr_list
+
+
+def box_plot_for_numerical(df, numerical_attr_list, plot_col_num=4):
+    attr_num = len(numerical_attr_list)
+    plot_row_num = (attr_num // plot_col_num) + (attr_num % plot_col_num > 0)
+    fig, axes = plt.subplots(plot_row_num, plot_col_num, figsize=(16, 5 * plot_row_num))
+    for i, attr in enumerate(numerical_attr_list):
+        row = i // plot_col_num
+        col = i % plot_col_num
+        df.boxplot(column=attr, ax=axes[row, col])
+        axes[row, col].set_title(attr)
+    plt.tight_layout()
+    plt.show()
+
+
+def tukeys_method(df, attr):
+    q1 = df[attr].quantile(0.25)
+    q3 = df[attr].quantile(0.75)
+    iqr = q3 - q1
+    inner_fence = 1.5 * iqr
+    outer_fence = 3 * iqr
+
+    # inner fence lower and upper end
+    inner_fence_le = q1 - inner_fence
+    inner_fence_ue = q3 + inner_fence
+
+    # outer fence lower and upper end
+    outer_fence_le = q1 - outer_fence
+    outer_fence_ue = q3 + outer_fence
+
+    outliers_prob = df[(df[attr] <= outer_fence_le) | (df[attr] >= outer_fence_ue)].index.tolist()
+    outliers_poss = df[(df[attr] <= inner_fence_le) | (df[attr] >= inner_fence_ue)].index.tolist()
+
+    return outliers_prob, outliers_poss
+
+
+def tukeys_method_for_numerical(df, numerical_attr_list):
+    print(f"\nImplement Tukey\'s fences to identify outliers based on the Inter Quartile Range (IQR) method:")
+    results = []
+    for attr in numerical_attr_list:
+        outliers_prob, outliers_poss = tukeys_method(df, attr)
+        results.append({
+            'Attribute': attr,
+            'Outliers Prob Count': len(outliers_prob),
+            'Outliers Prob Fraction': len(outliers_prob) / len(df[attr]),
+            'Outliers Poss Count': len(outliers_poss),
+            'Outliers Poss Fraction': len(outliers_poss) / len(df[attr])
+        })
+    results_df = pd.DataFrame(results)
+    display(results_df)
+
+
+def hist_plot_for_numerical(df, numerical_attr_list):
+    df[numerical_attr_list].hist(figsize=(16, 16))
+    plt.tight_layout()
+    plt.show()
