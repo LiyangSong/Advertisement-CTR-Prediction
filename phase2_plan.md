@@ -1,15 +1,18 @@
 ## EDA Plan (10/22)
 1. Create a copy of the data for exploration. (Liyang)
 2. Describe attributes basic info. (Liyang)
-3. Identify target, numerical, categorical. (Liyang)
-4. Missingness. (Liyang)
-5. Outliers. (Liyang)
-6. Usefulness for task (corraltion with target, variability) (Qian)
-7. If numerical histogram and basic stats(mean, median, variance, max, min). If
-categorical, cardinality and value counts. (Qian)
-8. correlations and associations between attributes. (Qian)
-9. Identify the promising transformations you may want to apply. (Liyang, Qian)
-10. Document what you have learned. (Liyang, Qian)
+3. Missingness. (Liyang)
+4. Identify target, numerical, categorical. (Liyang)
+5. For numerical.
+   - Distribution (Histogram, KDE plots, etc.). (Liyang)
+   - Outliers detection (Box plots). (Liyang)
+   - Correlations and associations between attributes. (Qian)
+   - Usefulness for task (correlation with target, variability). (Qian)
+6. For categorical.
+   - Distribution (bar plots, etc.). (Qian)
+   - Cardinality and value counts. (Qian)
+7. Identify the promising transformations you may want to apply. (Liyang, Qian)
+8. Document what you have learned. (Liyang, Qian)
 
 ## Data Preparation Plan (10/27)
 1. Drop Outliers
