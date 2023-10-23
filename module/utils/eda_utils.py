@@ -59,28 +59,38 @@ def check_out_missingness(df, sample_size_threshold=250):
         print("No missing values in data set.")
 
 
-def split_numerical_nominal_attr(df, target):
-    print("\nSplit nominal and numerical attr:")
+def attr_unique_counts(df):
+    result = []
+    for attr in df.columns:
+        result.append({
+            "attribute": attr,
+            "unique counts": len(df[attr].unique())
+        })
+    result_df = pd.DataFrame(result)
+    display(result_df)
+
+
+def split_numerical_categorical_attr(df, target):
+    print("\nSplit numerical and categorical attributes:")
 
     cap_x_df = df.drop(target, axis=1)
     numerical_attr_list = cap_x_df.select_dtypes(include=['number']).columns.tolist()
-    nominal_attr_list = cap_x_df.select_dtypes(exclude=['number']).columns.tolist()
+    categorical_attr_list = cap_x_df.select_dtypes(exclude=['number']).columns.tolist()
 
     print(f"numerical_attr_list: \n{numerical_attr_list}")
-    print(f"nominal_attr_list: \n{nominal_attr_list}")
+    print(f"categorical_attr_list: \n{categorical_attr_list}")
 
-    return numerical_attr_list, nominal_attr_list
+    return numerical_attr_list, categorical_attr_list
 
 
-def box_plot_for_numerical(df, numerical_attr_list, plot_col_num=4):
-    attr_num = len(numerical_attr_list)
-    plot_row_num = (attr_num // plot_col_num) + (attr_num % plot_col_num > 0)
-    fig, axes = plt.subplots(plot_row_num, plot_col_num, figsize=(16, 5 * plot_row_num))
+def box_plot_for_numerical(df, numerical_attr_list, n_cols=5):
+    n_attrs = len(numerical_attr_list)
+    n_rows = (n_attrs // n_cols) + (n_attrs % n_cols > 0)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 3 * n_rows))
     for i, attr in enumerate(numerical_attr_list):
-        row = i // plot_col_num
-        col = i % plot_col_num
+        row = i // n_cols
+        col = i % n_cols
         df.boxplot(column=attr, ax=axes[row, col])
-        axes[row, col].set_title(attr)
     plt.tight_layout()
     plt.show()
 
@@ -122,17 +132,28 @@ def tukeys_method_for_numerical(df, numerical_attr_list):
     display(results_df)
 
 
-def hist_plot_for_numerical(df, numerical_attr_list):
-    df[numerical_attr_list].hist(figsize=(16, 16))
+def hist_plot_for_numerical(df, numerical_attr_list, n_cols=5):
+    print("\nHistogram plots for numerical attributes:")
+    n_attrs = len(numerical_attr_list)
+    n_rows = (n_attrs // n_cols) + (n_attrs % n_cols > 0)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 2 * n_rows))
+    for i, attr in enumerate(numerical_attr_list):
+        row = i // n_cols
+        col = i % n_cols
+        ax = axes[row, col]
+        sns.histplot(df[attr], ax=ax, kde=True)
+        ax.lines[0].set_color('crimson')
     plt.tight_layout()
     plt.show()
 
-def basic_stats(df, numerical_attr_list):
-    basic_info = df[numerical_attr_list].describe().astype(int)
-    display(basic_info)
 
-def corr_attr(df, numerical_attr_list):
+def corr_for_numerical(df, numerical_attr_list):
+    print("\n Heatmap and matrix visualizing correlation between numerical attributes:")
+
     result = df[numerical_attr_list].corr()
+    sns.heatmap(result)
+    plt.show()
+
     corr_df = (
         result.where(
             np.triu(np.ones(result.shape), k=1)
@@ -141,23 +162,19 @@ def corr_attr(df, numerical_attr_list):
         .stack()
         .to_frame(name='correlation')
     )
-
     new_index = [i + ' with ' + j for i, j in corr_df.index]
     corr_df.index = new_index
     corr_df = corr_df.sort_values('correlation', ascending=False)
-    sns.heatmap(result)
-    plt.show()
-    return corr_df
+    display(corr_df)
 
-def cardinality_nominal(df, nominal_attr_list):
-    return 0
 
-def outlier_nominal(df, nominal_attr_list):
-    return 0
-    
-def corr_target(df, target, numerical_attr_list):
+def corr_target_for_numerical(df, target, numerical_attr_list):
     corr_tar = df[numerical_attr_list].corrwith(df[target])
     var_attr = np.var(df[numerical_attr_list]).astype(int)
     result_df = pd.concat([corr_tar, var_attr], axis = 1)
     result_df = result_df.rename(columns={0: "Correlation", 1: "Variance"})
-    return result_df
+    display(result_df)
+
+
+def cardinality_for_categorical(df, nominal_attr_list):
+    return 0
