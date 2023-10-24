@@ -3,27 +3,33 @@
 2. Describe attributes basic info. (Liyang)
 3. Duplicate obs. (Liyang) - observed
 4. Missing targets. (Liyang) - not observed
-4. Missingness. (Liyang) - not observed
-5. Identify target, numerical, categorical. (Liyang) - all categorical
-6. EDA for categorical.
+5. Missingness. (Liyang) - not observed
+6. Identify target, numerical, categorical. (Liyang) - all categorical
+7. EDA for categorical.
    - Distribution (bar plots, etc.). (Qian)
    - Cardinality and value counts. (Qian)
-7. Target encoding for categorical. (Liyang)
-8. EDA for numerical. 
+8. Target encoding for categorical. (Liyang)
+9. EDA for numerical. 
    - Distribution (Histogram, KDE plots, etc.). (Liyang)
    - Outliers detection (Box plots). (Liyang)
    - Correlations and associations between attributes. (Qian)
+   - VIF (Qian)
    - Usefulness for task (correlation with target, variability). (Qian)
-9. Identify the promising transformations you may want to apply. (Liyang, Qian)
-10. Document what you have learned. (Liyang, Qian)
+10. Identify the promising transformations you may want to apply. (Liyang, Qian)
+11. Document what you have learned. (Liyang, Qian)
 
 ## Data Preparation Plan (10/27)
-1. Drop Outliers
-2. Missingness (fill or drop)
-3. Drop attributes (useless/high correlation)
-4. Discretize continuous features
-5. Decompose features
-6. transformations of features
-7. Aggregate into new features
-8. Feature scaling
-9. Document what you have learned. (Liyang, Qian)
+1. Create a copy (Liyang)
+2. Identify required transformations (Qian)
+   - Drop Outliers - not need 
+   - Missingness (fill or drop) - not need 
+   - Discretize continuous features - not need
+   - Decompose features - not need
+   - Transformations of features - not need
+   - Aggregate into new features - not need
+3. Create a pipeline of transformer (Liyang)
+   - Drop duplicate obs 
+   - Target Encoding
+   - Drop attributes (useless/high correlation)
+   - Feature scaling
+4. Document what you have learned. (Liyang, Qian)
