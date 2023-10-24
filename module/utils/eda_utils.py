@@ -132,7 +132,7 @@ def tukeys_method_for_numerical(df, numerical_attr_list):
     display(results_df)
 
 
-def hist_plot_for_numerical(df, numerical_attr_list, n_cols=5):
+def hist_plot_for_numerical(df, numerical_attr_list, bins=10, n_cols=5, ):
     print("\nHistogram plots for numerical attributes:")
     n_attrs = len(numerical_attr_list)
     n_rows = (n_attrs // n_cols) + (n_attrs % n_cols > 0)
@@ -141,16 +141,16 @@ def hist_plot_for_numerical(df, numerical_attr_list, n_cols=5):
         row = i // n_cols
         col = i % n_cols
         ax = axes[row, col]
-        sns.histplot(df[attr], ax=ax, kde=True)
+        sns.histplot(df[attr], ax=ax, kde=True, bins=bins)
         ax.lines[0].set_color('crimson')
     plt.tight_layout()
     plt.show()
 
 
-def corr_for_numerical(df, numerical_attr_list):
-    print("\n Heatmap and matrix visualizing correlation between numerical attributes:")
+def corr_for_numerical(df, numerical_attr_list, threshold=0.5):
+    print("\nHeatmap visualizing correlation between numerical attributes:")
 
-    result = df[numerical_attr_list].corr()
+    result = df[numerical_attr_list].corr().abs()
     sns.heatmap(result)
     plt.show()
 
@@ -165,6 +165,8 @@ def corr_for_numerical(df, numerical_attr_list):
     new_index = [i + ' with ' + j for i, j in corr_df.index]
     corr_df.index = new_index
     corr_df = corr_df.sort_values('correlation', ascending=False)
+    corr_df = corr_df[corr_df['correlation'] > threshold]
+    print(f"\nMatrix visualizing correlation (>{threshold}) between numerical attributes:")
     display(corr_df)
 
 
