@@ -6,7 +6,7 @@
 5. Missingness. (Liyang) - not observed
 6. Identify target, numerical, categorical. (Liyang) - all categorical
 7. EDA for categorical.
-   - Distribution (bar plots, etc.). (Qian)
+   - Distribution (violin plots). (Qian)
    - Cardinality and value counts. (Qian)
 8. Target encoding for categorical. (Liyang)
 9. EDA for numerical. 
