@@ -6,14 +6,14 @@
 5. Missingness. (Liyang) - not observed
 6. Identify target, numerical, categorical. (Liyang) - all categorical
 7. EDA for categorical.
-   - Distribution (violin plots). (Qian)
+   - Distribution (violin plots). (Liyang)
    - Cardinality and value counts. (Qian)
 8. Target encoding for categorical. (Liyang)
 9. EDA for numerical. 
    - Distribution (Histogram, KDE plots, etc.). (Liyang)
    - Outliers detection (Box plots). (Liyang)
    - Correlations and associations between attributes. (Qian)
-   - VIF (Qian)
+   - VIF (Liyang)
    - Usefulness for task (correlation with target, variability). (Qian)
 10. Identify the promising transformations you may want to apply. (Liyang, Qian)
 11. Document what you have learned. (Liyang, Qian)
