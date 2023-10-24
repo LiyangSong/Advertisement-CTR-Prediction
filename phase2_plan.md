@@ -2,6 +2,7 @@
 1. Create a copy of the data for exploration. (Liyang)
 2. Describe attributes basic info. (Liyang)
 3. Duplicate obs. (Liyang) - observed
+4. Missing targets. (Liyang) - not observed
 4. Missingness. (Liyang) - not observed
 5. Identify target, numerical, categorical. (Liyang) - all categorical
 6. EDA for categorical.
