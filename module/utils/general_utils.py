@@ -34,7 +34,22 @@ def read_csv(csv_path, sep=","):
     return df
 
 
-def save_to_csv(cap_x_df, y_df, csv_filename):
+def save_to_csv(*args):
+    if len(args) != 2 | len(args) != 3:
+        raise ValueError("Unsupported number of arguments")
+
     print("\nSave DataFrame into csv file:")
-    pd.concat([cap_x_df, y_df], axis=1).to_csv(csv_filename, index=False)
+
+    if len(args) == 2:
+        df = args[0]
+        csv_filename = args[1]
+        df.to_csv(csv_filename, index=False)
+    if len(args) == 3:
+        cap_x_df = args[0]
+        y_df = args[1]
+        csv_filename = args[2]
+        pd.concat([cap_x_df, y_df], axis=1).to_csv(csv_filename, index=False)
+
     print(f"File saved: {csv_filename}")
+
+
