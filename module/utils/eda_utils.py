@@ -131,7 +131,7 @@ def tukeys_method_for_numerical(df, numerical_attr_list):
             'Outliers Poss Count': len(outliers_poss),
             'Outliers Poss Fraction': len(outliers_poss) / len(df[attr])
         })
-    results_df = pd.DataFrame(results)
+    results_df = pd.DataFrame(results).sort_values('Outliers Prob Fraction', ascending=False)
     display(results_df)
 
 
