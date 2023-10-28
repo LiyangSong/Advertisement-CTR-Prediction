@@ -19,7 +19,7 @@
 11. Document what you have learned. (Liyang, Qian)
 
 ## Data Preparation Plan (10/27)
-1. Create a copy (Liyang)
+1. Create a copy (Liyang) - done
 2. Identify required transformations (Qian)
    - Drop Outliers - not need 
    - Missingness (fill or drop) - not need 
@@ -28,9 +28,9 @@
    - Transformations of features - not need
    - Aggregate into new features - not need
 3. Create a pipeline of transformer (Liyang)
-   - Drop duplicate obs 
-   - Target Encoding
-   - Drop attributes (useless/high correlation)
-   - Feature scaling
-4. EDA on transformed data (Liyang)
+   - Drop duplicate obs  - done
+   - Target Encoding - done
+   - Drop attributes (useless/high correlation) - done
+   - Feature scaling - done
+4. EDA on transformed data (Liyang) - done
 5. Document what you have learned. (Liyang, Qian)
