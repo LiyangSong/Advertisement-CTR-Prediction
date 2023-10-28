@@ -1,4 +1,5 @@
 from IPython.core.display_functions import display
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import TargetEncoder
 import pandas as pd
@@ -48,3 +49,22 @@ def target_encode_categorical(df, categorical_attr_list, target):
     print(f"encoded_df.head():")
     display(result.head())
     return result
+
+
+def drop_duplicate_obs(df):
+    print("\nDrop duplicate observations:")
+    drop_dup_df = df.drop_duplicates()
+    print("df.shape: ", df.shape)
+    print("drop_dup_df.shape: ", drop_dup_df.shape)
+    return drop_dup_df
+
+
+class DropColumnsTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, attrs_to_drop):
+        self.attrs_to_drop = attrs_to_drop
+
+    def fit(self, cap_x, y=None):
+        return self
+
+    def transform(self, cap_x, y=None):
+        return cap_x.drop(columns=self.attrs_to_drop)
