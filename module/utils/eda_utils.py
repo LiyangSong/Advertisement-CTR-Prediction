@@ -4,6 +4,9 @@ import seaborn as sns
 import missingno as msno
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+import statsmodels.api as sm
 
 
 def check_out_general_info(df):
@@ -132,7 +135,7 @@ def tukeys_method_for_numerical(df, numerical_attr_list):
     display(results_df)
 
 
-def hist_plot_for_numerical(df, numerical_attr_list, bins=10, n_cols=5, ):
+def hist_plot_for_numerical(df, numerical_attr_list, bins=10, n_cols=5):
     print("\nHistogram plots for numerical attributes:")
     n_attrs = len(numerical_attr_list)
     n_rows = (n_attrs // n_cols) + (n_attrs % n_cols > 0)
@@ -171,12 +174,57 @@ def corr_for_numerical(df, numerical_attr_list, threshold=0.5):
 
 
 def corr_target_for_numerical(df, target, numerical_attr_list):
-    corr_tar = df[numerical_attr_list].corrwith(df[target])
-    var_attr = np.var(df[numerical_attr_list]).astype(int)
-    result_df = pd.concat([corr_tar, var_attr], axis = 1)
-    result_df = result_df.rename(columns={0: "Correlation", 1: "Variance"})
-    display(result_df)
+    print("\nCalculate the correlation between each attribute and the target:")
+    corr_tar = pd.DataFrame(df[numerical_attr_list].corrwith(df[target]), columns=["correlation"])
+    corr_tar = corr_tar.sort_values('correlation')
+    display(corr_tar)
 
 
-def cardinality_for_categorical(df, nominal_attr_list):
-    return 0
+def variance_for_numerical(df, numerical_attr_list):
+    print("\nCalculate the variance of each attribute:")
+    var_attr = pd.DataFrame(np.var(df[numerical_attr_list]), columns=["variance"])
+    var_attr = var_attr.sort_values('variance')
+    display(var_attr)
+
+
+def prep_data_for_vif_calc(df, numerical_attr_list):
+    print("Prepare DataFrame for vif calculation:")
+    if df.isna().sum().sum() > 0:
+        print(f"Found observations with nans - pre obs. drop a_df.shape: {df.shape}")
+        df = df.dropna(axis=0, how='any')
+        print(f"Post obs. drop a_df.shape: {df.shape}")
+
+    design_matrix = None
+    bias_attr = None
+    for attr in df[numerical_attr_list]:
+        if df[attr].nunique() == 1 and df[attr].iloc[0] == 1:  # found the bias attribute
+            design_matrix = df[numerical_attr_list]
+            bias_attr = attr
+            print("Found the bias term - no need to add one")
+            break
+
+    if design_matrix is None:
+        design_matrix = sm.add_constant(df[numerical_attr_list])
+        bias_attr = 'const'
+        numerical_attr_list = [bias_attr] + numerical_attr_list
+        print("Added a bias term to the data frame to construct the design matrix for assessment of vifs.")
+
+    # if numerical attributes in the data frame are not scaled then scale them - don't scale the bias term
+    numerical_attr_list.remove(bias_attr)
+    if not (df[numerical_attr_list].mean() <= 1e-10).all():
+        print("Scale the attributes - but not the bias term")
+        design_matrix[numerical_attr_list] = StandardScaler().fit_transform(design_matrix[numerical_attr_list])
+
+    return design_matrix, bias_attr
+
+
+def print_vifs(df, numerical_attr_list):
+    print("\nInvestigate multi co-linearity: calculate variance inflation factors (VIF):")
+    design_matrix, bias_attr = prep_data_for_vif_calc(df, numerical_attr_list)
+
+    vif_df = pd.DataFrame({
+        "attribute": design_matrix.columns.tolist(),
+        "vif": [variance_inflation_factor(design_matrix.values, i) for i in range(design_matrix.shape[1])]
+    })
+    vif_df = vif_df.sort_values('vif', ascending=False)
+    display(vif_df)
