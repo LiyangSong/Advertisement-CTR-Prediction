@@ -1,21 +1,21 @@
 ## EDA Plan (10/22)
-1. Create a copy of the data for exploration. (Liyang)
-2. Describe attributes basic info. (Liyang)
+1. Create a copy of the data for exploration. (Liyang) - done
+2. Describe attributes basic info. (Liyang) - done
 3. Duplicate obs. (Liyang) - observed
 4. Missing targets. (Liyang) - not observed
 5. Missingness. (Liyang) - not observed
-6. Identify target, numerical, categorical. (Liyang) - all categorical
+6. Identify target, numerical, categorical. (Liyang) - all attrs are categorical
 7. EDA for categorical.
-   - Distribution (violin plots). (Liyang)
-   - Cardinality and value counts. (Qian)
-8. Target encoding for categorical. (Liyang)
+   - Distribution (violin plots). (Liyang) - done
+   - Cardinality and value counts. (Qian) - done
+8. Target encoding for categorical. (Liyang) - done
 9. EDA for numerical. 
-   - Distribution (Histogram, KDE plots, etc.). (Liyang)
-   - Outliers detection (Box plots). (Liyang)
-   - Correlations and associations between attributes. (Qian)
-   - VIF (Liyang)
-   - Usefulness for task (correlation with target, variability). (Qian)
-10. Identify the promising transformations you may want to apply. (Liyang, Qian)
+   - Distribution (Histogram, KDE plots, etc.). (Liyang) - done
+   - Outliers detection (Box plots). (Liyang) - done
+   - Correlations and associations between attributes. (Qian) - done
+   - VIF (Liyang) - done
+   - Usefulness for task (correlation with target, variability). (Qian) - done
+10. Identify the promising transformations you may want to apply. (Liyang, Qian) - done
 11. Document what you have learned. (Liyang, Qian)
 
 ## Data Preparation Plan (10/27)
@@ -32,4 +32,5 @@
    - Target Encoding
    - Drop attributes (useless/high correlation)
    - Feature scaling
-4. Document what you have learned. (Liyang, Qian)
+4. EDA on transformed data (Liyang)
+5. Document what you have learned. (Liyang, Qian)
