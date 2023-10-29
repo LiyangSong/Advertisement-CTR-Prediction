@@ -9214,7 +9214,7 @@ Histogram plots for numerical attributes:
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <ul>
-<li>The distribution of encoded attributes becomes smoother than before, as target encoding is less sensitive to extreme values.</li>
+<li>The distribution of encoded attributes becomes consecutive and smoother than before, as target encoding is less sensitive to extreme values.</li>
 </ul>
 </div>
 </div>
@@ -9606,9 +9606,8 @@ Implement Tukey's fences to identify outliers based on the Inter Quartile Range 
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <ul>
-<li>Outlier fraction in all attributes decreased after target encoding. This is reasonable as target encoding can kind of smooth extreme values and make the feature less "outliery".</li>
-<li>However, there are still some attributes with a significantly high outlier fraction (&gt;20%).</li>
-<li>We will not decide to drop them simply in this step. Considering the domain knowledge, ad creative type, ad display form, and app category may be useful predictors.</li>
+<li>There are still some attributes with a significantly high outlier fraction (&gt;20%) after target encoding, this is reasonable for transformed categorical variables.</li>
+<li>We will not decide to drop them simply in this step. Considering the domain knowledge, some of them may be useful predictors.</li>
 </ul>
 </div>
 </div>
@@ -10577,7 +10576,7 @@ Calculate the variance of each attribute:
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Script run time: 7.728865325450897 minutes
+<pre>Script run time: 8.815033801396687 minutes
 </pre>
 </div>
 </div>
