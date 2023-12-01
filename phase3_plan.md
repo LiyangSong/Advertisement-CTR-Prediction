@@ -1,8 +1,8 @@
 ## Shortlist Promising Models (11.30)
 
-#### Qian: linear, random forest, Liyang: gradient boost, neural net
+#### Qian: SGD, decision tree, Liyang: random forest, ada boost, gradient boost
 
-1. Train many quick and dirty models from different categories (linear, random forest, gradient boost, neural net) using standard parameters. 
+1. Train many quick and dirty models from different categories (SGD, decision tree, random forest, ada boost, gradient boost) using standard parameters. 
 2. Measure and compare their performance. For each model, use N-fold cross validation and compute the mean and standard deviation of the performance measure on the N folds.
 3. Analyze the most significant attributes for each algorithm.
 4. Analyze the types of errors the models make: What data would a human have used to avoid these errors?
