@@ -213,8 +213,10 @@ def tune_hyperparameters_sgd(x_df, y_df, pipe):
         'preprocessor__categorical__target_encoder__smooth': ['auto'],
         'estimator__loss': ['log_loss'],
         'estimator__penalty': ['l2', 'l1'],
-        'estimator__alpha': [0.0001, 0.001],
+        'estimator__alpha': [0.0001, 0.001, 0.01],
         'estimator__max_iter': [1000, 10000],
+        'estimator__l1_ratio': [0.15, 0.3, 0.5],
+        'estimator__n_jobs': [None, -1],
     }
 
     grid_search = GridSearchCV(estimator=pipe, param_grid=param_grid, scoring='accuracy', cv=5)
