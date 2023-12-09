@@ -36,12 +36,12 @@ def split_train_test_df(df, target, stratify=False, test_size=0.2, random_state=
     return train_cap_x_df, train_y_df, test_cap_x_df, test_y_df
 
 
-def target_encode_categorical(df, categorical_attr_list, target):
+def target_encode_categorical(df, categorical_attr_list, target, random_state):
     print("\nTarget encode categorical attributes:")
 
     cap_x = df[categorical_attr_list]
     y = df[target]
-    encoder = TargetEncoder(random_state=42)
+    encoder = TargetEncoder(random_state=random_state)
     cap_x_trans = encoder.fit_transform(cap_x, y)
     cap_x_trans_df = pd.DataFrame(cap_x_trans, columns=cap_x.columns, index=df.index)
 
