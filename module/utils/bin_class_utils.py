@@ -80,11 +80,20 @@ def eval_class(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_lis
     y_proba = trained_estimator.predict_proba(cap_x_df)[:, 1]
     y_pred = (y_proba >= threshold).astype(int)
 
+    results = dict()
+    results['stage'] = data_set_name
+
     print('Check accuracy score')
-    print(f'{data_set_name} set accuracy score: {accuracy_score(y_df, y_pred)}')
+    accuracy_score_ = accuracy_score(y_df, y_pred)
+    results['accuracy'] = round(accuracy_score_, 4)
+    print(f'{data_set_name} set accuracy score: {accuracy_score_}')
+
 
     print('\nCheck classification report')
-    print(classification_report(y_df, y_pred))
+    classification_report_ = classification_report(y_df, y_pred, digits=4, output_dict=True)
+    results['precision'] = classification_report_['1']['precision']
+    results['recall'] = classification_report_['1']['recall']
+    print(classification_report_)
 
     print('\nCheck confusion matrix')
     cm = confusion_matrix(y_df, y_pred)
@@ -104,35 +113,42 @@ def eval_class(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_lis
             cv=5,
             n_jobs=-1
         )
+        results[f'cv_mean_{scoring}'] = round(np.mean(scores), 4)
+
         print(f'\n{scoring} scores: {scores}')
-        print(f'np.mean(scores): {np.mean(scores)}')
-        print(f'np.std(scores, ddof=1): {np.std(scores, ddof=1)}')
+        print(f'np.mean(scores): {np.mean(scores):.4f}')
+        print(f'np.std(scores, ddof=1): {np.std(scores, ddof=1):.4f}')
 
     print('\nCheck the ROC Curve and AUC')
-    roc_auc = roc_auc_score(y_df, y_pred)
+    roc_auc_score_ = round(roc_auc_score(y_df, y_pred), 4)
     fpr, tpr, _ = roc_curve(y_df, y_proba)
+    results['roc_auc_score'] = roc_auc_score_
+
     plt.figure()
     plt.plot(fpr, tpr, linewidth=2, label="ROC curve")
     plt.plot([0, 1], [0, 1], 'k:', label="Random classifier's ROC curve")
     plt.xlabel('False Positive Rate (Sensitivity)')
     plt.ylabel('True Positive Rate (Specificity)')
     plt.title(f'{data_set_name} Set Roc Curve\n'
-              f'roc_auc_score = {round(roc_auc, 4)}')
+              f'roc_auc_score = {roc_auc_score_}')
     plt.grid()
     plt.show()
 
     print('\nCheck Precision-Recall Curve and Average Precision Score')
     precision, recall, _ = precision_recall_curve(y_df, y_proba)
-    ave_precision = average_precision_score(y_df, y_proba)
+    ave_precision_score_ = round(average_precision_score(y_df, y_proba), 4)
     
     plt.figure()
     plt.plot(recall, precision)
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.title(f'{data_set_name} Set Precision-Recall Curve\n'
-              f'ave_precision_score = {round(ave_precision, 4)}')
+              f'ave_precision_score = {ave_precision_score_}')
     plt.grid()
     plt.show()
+
+    results_df = pd.DataFrame([results], columns=list(results.keys()))
+    return results_df
 
 
 def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_importance_random_state, permutation_scoring_list):
@@ -162,8 +178,8 @@ def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_impo
                 std_dev = r.importances_std[i]
 
                 if metric == 'neg_mean_squared_error':
-                    mean = np.sqrt(mean)
-                    std_dev = np.sqrt(std_dev)
+                    mean = round(np.sqrt(mean), 4)
+                    std_dev = round(np.sqrt(std_dev), 4)
 
                 results.append({
                     "metric_name": temp_metric,
@@ -174,36 +190,6 @@ def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_impo
 
     results_df = pd.DataFrame(results)
     return results_df.sort_values(by=["metric_name", "metric_mean"], ascending=[True, False])
-
-
-# perf_dict_list = []
-#
-# for class_weight_name, class_weight_option in class_weight_options_dict.items():
-#     estimator = SGDClassifier(loss=loss, random_state=model_random_state, class_weight=class_weight_option)
-#
-#     composite_estimator = Pipeline(steps=[('preprocessor', preprocessor), ('estimator', estimator)])
-#     print(f'', '*' * 60, sep='')
-#     print(f'\nclass_weight {class_weight_name}')
-#     roc_auc, ave_precision = \
-#         bin_class_utils.eval_class(train_cap_x_df, train_y_df, composite_estimator, 'train sample')
-#     row_dict = {
-#         'class_weight_name': class_weight_name,
-#         'class imbalance class 0': train_y_df.value_counts(normalize=True).loc[0],
-#         'class imbalance class 1': train_y_df.value_counts(normalize=True).loc[1],
-#         'roc_curve_auc': roc_auc,
-#         'ave_precision_score': ave_precision,
-#         'data_set': 'train'
-#     }
-#     perf_dict_list.append(row_dict)
-#
-# perf_dict_df = pd.DataFrame(perf_dict_list)
-# perf_dict_df
-
-
-# # compare the performance on the train and validation set
-# uncompared_columns = ['class imbalance class 0', 'class imbalance class 1']
-# best_perf_dict_df = perf_dict_df[perf_dict_df['class_weight_name'] == 'None'].drop(columns = uncompared_columns)
-# pd.concat([best_perf_dict_df, val_perf_dict_df], ignore_index=True)
 
 
 def drop_least_important_attrs(results_df, threshold_percent):
@@ -399,7 +385,7 @@ def print_classification_metrics_at_thresholds(cap_x_df, y_df, trained_estimator
         y_pred = (y_proba >= threshold).astype(int)
 
         print("\nClassification Report at Threshold {:.2f}:\n".format(threshold))
-        print(classification_report(y_df, y_pred))
+        print(classification_report(y_df, y_pred, digits=4))
 
 
 def plot_errors_to_threshold(best_estimator, cap_x_df, y_df, data_set_name):
