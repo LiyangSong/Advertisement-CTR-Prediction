@@ -56,6 +56,7 @@ def get_default_model(estimator_name, model_random_state):
             random_state=model_random_state
         ),
         "RandomForestClassifier": DecisionTreeClassifier(
+            class_weight='balanced',
             random_state=model_random_state
         ),
         "AdaBoostClassifier": AdaBoostClassifier(
@@ -73,11 +74,11 @@ def get_default_model(estimator_name, model_random_state):
     return estimator_list[estimator_name]
 
 
-def eval_class(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_list):
+def eval_class(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_list, threshold=0.50):
 
     print(f'Evaluate the trained estimator performance on {data_set_name} set')
-    y_pred = trained_estimator.predict(cap_x_df)
     y_proba = trained_estimator.predict_proba(cap_x_df)[:, 1]
+    y_pred = (y_proba >= threshold).astype(int)
 
     print('Check accuracy score')
     print(f'{data_set_name} set accuracy score: {accuracy_score(y_df, y_pred)}')
@@ -175,30 +176,6 @@ def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_impo
     return results_df.sort_values(by=["metric_name", "metric_mean"], ascending=[True, False])
 
 
-# possible options for class_weight hyperparameter
-# balanced = train_y_df.shape[0] / (train_y_df.nunique()*np.bincount(train_y_df))
-# balanced_dict = \
-#    dict(
-#        zip(
-#            train_y_df.unique(),
-#            balanced
-#        )
-#    )
-# balanced_and_normalized_dict = \
-#     dict(
-#         zip(
-#             train_y_df.unique(),
-#             balanced/sum(balanced)
-#             )
-#         )
-# class_weight_options_dict = {
-#     'None': None,
-#     'balanced mode': 'balanced',
-#     'balanced computed': balanced_dict,
-#     'balanced_and_normalized': balanced_and_normalized_dict
-# }
-
-
 # perf_dict_list = []
 #
 # for class_weight_name, class_weight_option in class_weight_options_dict.items():
@@ -228,6 +205,7 @@ def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_impo
 # best_perf_dict_df = perf_dict_df[perf_dict_df['class_weight_name'] == 'None'].drop(columns = uncompared_columns)
 # pd.concat([best_perf_dict_df, val_perf_dict_df], ignore_index=True)
 
+
 def drop_least_important_attrs(results_df, threshold_percent):
     attrs_below_threshold = {}
 
@@ -243,6 +221,7 @@ def drop_least_important_attrs(results_df, threshold_percent):
     common_attrs = set.intersection(*attrs_below_threshold.values())
 
     return list(common_attrs)
+
 
 def balance_class_weight(y_df):
     balanced = y_df.shape[0] / (y_df.nunique()*np.bincount(y_df))
@@ -264,31 +243,25 @@ def balance_class_weight(y_df):
 
     return class_weight_options
 
-def tune_hyperparameters_dt(x_df, y_df, pipe, class_weight_options):
 
-    param_grid = {
-        'preprocessor__numerical__imputer__strategy': ['mean', 'median'],
-        'preprocessor__categorical__target_encoder__smooth': ['auto'],
-        'estimator__criterion': ['gini', 'entropy', 'log_loss'],
-        'estimator__max_depth': [None, 5, 10],
-        'estimator__min_samples_split': [2, 5],
-        'estimator__min_samples_leaf': [1, 2],
-        'estimator__max_features': [None, 'sqrt', 0.8, 1.0],
-        'estimator__splitter': ['best'],
-        'estimator__class_weight': class_weight_options
-    }
+def tune_hyperparameters(cap_x_df, y_df, pipe, param_grid):
+    grid_search = GridSearchCV(
+        estimator=pipe,
+        param_grid=param_grid,
+        scoring='average_precision',
+        cv=5,
+        n_jobs=-1,
+        verbose=1
+    )
+    grid_search.fit(cap_x_df, y_df.values.ravel())
 
-    grid_search = GridSearchCV(estimator=pipe, param_grid=param_grid, scoring='accuracy', cv=5)
-    grid_search.fit(x_df, y_df.values.ravel())
-    print("Best estimator:", grid_search.best_params_)
+    print("Best estimator hyper parameters:\n", grid_search.best_params_)
 
     best_model = grid_search.best_estimator_
-
     return best_model
 
 
-
-def tune_hyperparameters_sgd(x_df, y_df, pipe):
+def tune_hyperparameters_sgd(cap_x_df, y_df, pipe):
 
     param_grid = {
         'preprocessor__numerical__imputer__strategy': ['mean', 'median'],
@@ -302,8 +275,8 @@ def tune_hyperparameters_sgd(x_df, y_df, pipe):
     }
 
     grid_search = GridSearchCV(estimator=pipe, param_grid=param_grid, scoring='accuracy', cv=5)
-    grid_search.fit(x_df, y_df.values.ravel())
-    print("Best estimator:", grid_search.best_params_)
+    grid_search.fit(cap_x_df, y_df.values.ravel())
+    print("Best estimator:\n", grid_search.best_params_)
 
     best_model = grid_search.best_estimator_
 
@@ -317,7 +290,6 @@ def avoiding_false_discoveries_class_helper(best_model, train_cap_x_df, train_y_
     bs_results_df = get_bootstrap_sample_class(num_samples, best_model, train_cap_x_df, train_y_df,
                                                validation_cap_x_df, validation_y_df)
 
-
     # get randomized target sample - fit and eval on randomized target samples + kde on sample
     rt_results_df = get_randomized_target_sample_class(num_samples, best_model, train_cap_x_df, train_y_df,
                                                        validation_cap_x_df, validation_y_df)
@@ -330,27 +302,31 @@ def avoiding_false_discoveries_class_helper(best_model, train_cap_x_df, train_y_
     plot_null_and_alt_dist(data=results_df.drop(columns='roc_auc_score_'), x='ave_precision_score', hue='distribution',
                            x_label= ' ave_precision_score', y_label='counts', title=plot_title,
                            kde=False)
-    plot_null_and_alt_dist(data=results_df.drop(columns='ave_precision_score'), x='roc_auc_score_', hue='distribution',
-                           x_label= ' roc_auc_score_', y_label='counts', title=plot_title, kde=False)
-    
-def get_bootstrap_sample_class(num_samples, best_model, train_cap_x_df, train_y_df, validation_cap_x_df,
-                               validation_y_df):
+    plot_null_and_alt_dist(data=results_df.drop(columns='ave_precision_score'), x='roc_auc_score', hue='distribution',
+                           x_label='roc_auc_score', y_label='counts', title=plot_title, kde=False)
+
+
+def get_bootstrap_sample_class(num_samples, best_model, train_cap_x_df, train_y_df, validation_cap_x_df, validation_y_df):
+
     df_row_dict_list = []
     for i in range(0, num_samples):
+
         bs_cap_x_df, bs_y_df = get_bootstrap_sample(train_cap_x_df, train_y_df, i)
         best_model.fit(bs_cap_x_df, bs_y_df)
-        ave_precision, roc_auc  = get_metrics(best_model, validation_cap_x_df, validation_y_df)
-        df_row_dict_list.append(
-            {
-                'distribution': 'bootstrap_sample',
-                'ave_precision_score': ave_precision,
-                'roc_auc_score_': roc_auc
-            }
-        )
+        y_pred_proba = best_model.predict_proba(validation_cap_x_df)[:, 1]
+
+        roc_auc = roc_auc_score(validation_y_df, y_pred_proba)
+        ave_precision = average_precision_score(validation_y_df, y_pred_proba)
+
+        df_row_dict_list.append({
+            'distribution': 'bootstrap_sample',
+            'ave_precision_score': ave_precision,
+            'roc_auc_score': roc_auc
+        })
 
     bs_results_df = pd.DataFrame(df_row_dict_list)
-
     return bs_results_df
+
 
 def get_bootstrap_sample(cap_x_df, y_df, random_state):
 
@@ -368,24 +344,27 @@ def get_bootstrap_sample(cap_x_df, y_df, random_state):
 
     return bs_cap_x_df, bs_y_df
 
+
 def get_randomized_target_sample_class(num_samples, best_model, train_cap_x_df, train_y_df, validation_cap_x_df,
                                        validation_y_df):
     df_row_dict_list = []
     for i in range(0, num_samples):
         rt_cap_x_df, rt_y_df = get_randomized_target_sample(train_cap_x_df, train_y_df, i)
         best_model.fit(rt_cap_x_df, rt_y_df)
-        ave_precision, roc_auc = get_metrics(best_model, validation_cap_x_df, validation_y_df)
-        df_row_dict_list.append(
-            {
-                'distribution': 'randomized_target_sample',
-                'ave_precision_score': ave_precision,
-                'roc_auc_score_': roc_auc
-            }
-        )
+        y_pred_proba = best_model.predict_proba(validation_cap_x_df)[:, 1]
+
+        roc_auc = roc_auc_score(validation_y_df, y_pred_proba)
+        ave_precision = average_precision_score(validation_y_df, y_pred_proba)
+
+        df_row_dict_list.append({
+            'distribution': 'randomized_target_sample',
+            'ave_precision_score': ave_precision,
+            'roc_auc_score': roc_auc
+        })
 
     rt_results_df = pd.DataFrame(df_row_dict_list)
-
     return rt_results_df
+
 
 def get_randomized_target_sample(cap_x_df, y_df, random_state):
 
@@ -411,21 +390,40 @@ def plot_null_and_alt_dist(data, x, hue, x_label='', y_label='', title='', kde=T
     plt.title(title)
     plt.show()
 
-def get_metrics(best_model, cap_x_df, y_df):
 
-    y_pred_proba = best_model.predict_proba(cap_x_df)[:, 1]
-
-    roc_auc = roc_auc_score(y_df, y_pred_proba)
-    ave_precision = average_precision_score(y_df, y_pred_proba)
-
-    return roc_auc, ave_precision
-
-def print_classification_metrics_at_thresholds(model, cap_x_df, y_df, thresholds):
+def print_classification_metrics_at_thresholds(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_list, thresholds):
 
     # Evaluate the model at each threshold and print metrics
     for threshold in thresholds:
-        y_pred_prob = model.predict_proba(cap_x_df)[:, 1]
-        y_pred = (y_pred_prob >= threshold).astype(int)
+        y_proba = trained_estimator.predict_proba(cap_x_df)[:, 1]
+        y_pred = (y_proba >= threshold).astype(int)
 
         print("\nClassification Report at Threshold {:.2f}:\n".format(threshold))
         print(classification_report(y_df, y_pred))
+
+
+def plot_errors_to_threshold(best_estimator, cap_x_df, y_df, data_set_name):
+    df_row_dict_list = []
+    for class_threshold in np.arange(0, 1.01, 0.01):
+        class_1_proba_preds = best_estimator.predict_proba(cap_x_df)[:, 1]
+        class_preds = np.where(class_1_proba_preds > class_threshold, 1, 0)
+
+        conf_matrix = confusion_matrix(y_df, class_preds)
+
+        df_row_dict_list.append({
+            'tn': conf_matrix[0, 0],
+            'fp': conf_matrix[0, 1],
+            'fn': conf_matrix[1, 0],
+            'tp': conf_matrix[1, 1],
+            'class_threshold': class_threshold
+        })
+
+    results_df = pd.DataFrame(df_row_dict_list)
+
+    sns.lineplot(data=results_df, x='class_threshold', y='fn', label='fn')
+    sns.lineplot(data=results_df, x='class_threshold', y='fp', label='fp')
+    plt.ylabel('fp and fn')
+    plt.legend()
+    plt.title(f'{data_set_name} fp and fn errors as a function of threshold')
+    plt.grid()
+    plt.show()
