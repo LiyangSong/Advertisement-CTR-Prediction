@@ -1,20 +1,22 @@
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import TargetEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
+from sklearn.tree import DecisionTreeClassifier
+
 import module.utils.data_prepare_utils as data_prepare_utils
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split, cross_val_score
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, precision_recall_curve, average_precision_score
-from sklearn.calibration import calibration_curve
 
 from sklearn.inspection import permutation_importance
 import seaborn as sns
-
 
 
 def build_preprocessing_pipeline(numerical_attr_list, categorical_attr_list, attrs_to_drop, target_type, target_encoding_random_state):
@@ -37,42 +39,85 @@ def build_preprocessing_pipeline(numerical_attr_list, categorical_attr_list, att
         ("categorical", categorical_transformer, categorical_attr_list)
     ])
 
-    preprocessor
-
     return preprocessor
 
-def eval_class(x_df, y_df, composite_estimator, type):
-    log_pipe = composite_estimator.fit(
-        x_df,
-        y_df.values.ravel()
-    )
 
-    y_pred = log_pipe.predict(x_df)
-    y_proba = log_pipe.predict_proba(x_df)[:, 1]
+def get_default_model(estimator_name, model_random_state):
+    estimator_list = {
+        "SGDClassifier": SGDClassifier(
+            loss='log_loss',
+            class_weight='balanced',
+            max_iter=10000,
+            random_state=model_random_state
+        ),
+        "DecisionTreeClassifier": DecisionTreeClassifier(
+            criterion='log_loss',
+            class_weight='balanced',
+            random_state=model_random_state
+        ),
+        "RandomForestClassifier": DecisionTreeClassifier(
+            random_state=model_random_state
+        ),
+        "AdaBoostClassifier": AdaBoostClassifier(
+            estimator=DecisionTreeClassifier(criterion='log_loss',
+                                             class_weight='balanced',
+                                             random_state=model_random_state
+                                             ),
+            random_state=model_random_state
+        ),
+        "GradientBoostingClassifier": GradientBoostingClassifier(
+            random_state=model_random_state
+        )
+    }
+
+    return estimator_list[estimator_name]
+
+
+def eval_class(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_list):
+
+    print(f'Evaluate the trained estimator performance on {data_set_name} set')
+    y_pred = trained_estimator.predict(cap_x_df)
+    y_proba = trained_estimator.predict_proba(cap_x_df)[:, 1]
 
     print('Check accuracy score')
-    print(f'{type} set accuracy score: {accuracy_score(y_df, y_pred)}')
+    print(f'{data_set_name} set accuracy score: {accuracy_score(y_df, y_pred)}')
+
+    print('\nCheck classification report')
+    print(classification_report(y_df, y_pred))
 
     print('\nCheck confusion matrix')
     cm = confusion_matrix(y_df, y_pred)
-    print(f'{type} set confusion matrix: \n{cm}')
+    print(f'{data_set_name} set confusion matrix: \n{cm}')
     print('True Positives = ', cm[0,0])
     print('True Negatives = ', cm[1,1])
     print('False Positives(Type I error) = ', cm[0,1])
     print('False Negatives(Type II error) = ', cm[1,0])
 
-    print('\nCheck classification report')
-    print(classification_report(y_df, y_pred))
-    
+    print('\nCheck cross validation score')
+    for scoring in cvs_scoring_list:
+        scores = cross_val_score(
+            trained_estimator,
+            cap_x_df,
+            y_df.values.ravel(),
+            scoring=scoring,
+            cv=5,
+            n_jobs=-1
+        )
+        print(f'\n{scoring} scores: {scores}')
+        print(f'np.mean(scores): {np.mean(scores)}')
+        print(f'np.std(scores, ddof=1): {np.std(scores, ddof=1)}')
+
     print('\nCheck the ROC Curve and AUC')
     roc_auc = roc_auc_score(y_df, y_pred)
-    fpr, tpr, _ = roc_curve(y_df, log_pipe.predict_proba(x_df)[:,1])
+    fpr, tpr, _ = roc_curve(y_df, y_proba)
     plt.figure()
-    plt.plot(fpr, tpr)
-    plt.plot([0, 1], [0, 1], linestyle='--')
+    plt.plot(fpr, tpr, linewidth=2, label="ROC curve")
+    plt.plot([0, 1], [0, 1], 'k:', label="Random classifier's ROC curve")
     plt.xlabel('False Positive Rate (Sensitivity)')
     plt.ylabel('True Positive Rate (Specificity)')
-    plt.title('Curve')
+    plt.title(f'{data_set_name} Set Roc Curve\n'
+              f'roc_auc_score = {round(roc_auc, 4)}')
+    plt.grid()
     plt.show()
 
     print('\nCheck Precision-Recall Curve and Average Precision Score')
@@ -83,74 +128,123 @@ def eval_class(x_df, y_df, composite_estimator, type):
     plt.plot(recall, precision)
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('Precision-Recall Curve')
-    plt.show()    
+    plt.title(f'{data_set_name} Set Precision-Recall Curve\n'
+              f'ave_precision_score = {round(ave_precision, 4)}')
+    plt.grid()
+    plt.show()
 
-    print('The roc_auc_score: ', roc_auc)
-    print('Average Precision Score: ', ave_precision)
 
-    return roc_auc, ave_precision
-
-def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_importance_random_state):
-    print("\nPermutation importance:")
+def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_importance_random_state, permutation_scoring_list):
+    print("\nCheck out permutation importance:")
     r_multi = permutation_importance(
         estimator,
         cap_x_df,
         y_df,
         n_repeats=10,
         random_state=permutation_importance_random_state,
-        scoring=['neg_mean_squared_error']
+        scoring=permutation_scoring_list
     )
 
-    permutation_df = pd.DataFrame(columns=['Feature', 'sqrt_neg_mean_squared_error'])
-
+    results = []
     for metric in r_multi:
+
+        temp_metric = metric
+        if metric == 'neg_mean_squared_error':
+            temp_metric = 'sqrt_' + metric
 
         r = r_multi[metric]
         for i in r.importances_mean.argsort()[::-1]:
-            if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
+            # if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
+            if r.importances_mean[i] - r.importances_std[i] > 0:  # A looser restrict allows more features shown
+
                 feature_name = cap_x_df.columns[i]
                 mean = r.importances_mean[i]
                 std_dev = r.importances_std[i]
+
                 if metric == 'neg_mean_squared_error':
                     mean = np.sqrt(mean)
                     std_dev = np.sqrt(std_dev)
-                
-                sqrt_neg_mean_squared_error = f"{mean:.3f} +/- {std_dev:.3f}"
 
-                row_data = {
-                    'Feature': feature_name,
-                    'sqrt_neg_mean_squared_error': sqrt_neg_mean_squared_error
-                }
-                permutation_df.loc[len(permutation_df)] = row_data
-        return permutation_df
+                results.append({
+                    "metric_name": temp_metric,
+                    "feature_name": feature_name,
+                    "metric_mean": mean,
+                    "metric_std_dev": std_dev
+                })
 
-def print_permutation_importance_all(estimator, cap_x_df, y_df, permutation_importance_random_state, score):
-    print("\nPermutation importance:")
-    r_multi = permutation_importance(
-        estimator,
-        cap_x_df,
-        y_df,
-        n_repeats=10,
-        random_state=permutation_importance_random_state,
-        scoring=[score]
-    )
-    for metric in r_multi:
+    results_df = pd.DataFrame(results)
+    return results_df.sort_values(by=["metric_name", "metric_mean"], ascending=[True, False])
 
-        r = r_multi[metric]
-        for i in r.importances_mean.argsort()[::-1]:
-            mean_minus_two_std = r.importances_mean[i] - 2 * r.importances_std[i]
-            if mean_minus_two_std > 0:
 
-                feature_name = cap_x_df.columns[i]
-                mean = r.importances_mean[i]
-                std_dev = r.importances_std[i]
-                
-                print(
-                    f"    {feature_name:<8}"
-                    f" {mean:.3f}"
-                    f" +/- {std_dev:.3f}"
-                )
+# possible options for class_weight hyperparameter
+# balanced = train_y_df.shape[0] / (train_y_df.nunique()*np.bincount(train_y_df))
+# balanced_dict = \
+#    dict(
+#        zip(
+#            train_y_df.unique(),
+#            balanced
+#        )
+#    )
+# balanced_and_normalized_dict = \
+#     dict(
+#         zip(
+#             train_y_df.unique(),
+#             balanced/sum(balanced)
+#             )
+#         )
+# class_weight_options_dict = {
+#     'None': None,
+#     'balanced mode': 'balanced',
+#     'balanced computed': balanced_dict,
+#     'balanced_and_normalized': balanced_and_normalized_dict
+# }
+
+
+# perf_dict_list = []
+#
+# for class_weight_name, class_weight_option in class_weight_options_dict.items():
+#     estimator = SGDClassifier(loss=loss, random_state=model_random_state, class_weight=class_weight_option)
+#
+#     composite_estimator = Pipeline(steps=[('preprocessor', preprocessor), ('estimator', estimator)])
+#     print(f'', '*' * 60, sep='')
+#     print(f'\nclass_weight {class_weight_name}')
+#     roc_auc, ave_precision = \
+#         bin_class_utils.eval_class(train_cap_x_df, train_y_df, composite_estimator, 'train sample')
+#     row_dict = {
+#         'class_weight_name': class_weight_name,
+#         'class imbalance class 0': train_y_df.value_counts(normalize=True).loc[0],
+#         'class imbalance class 1': train_y_df.value_counts(normalize=True).loc[1],
+#         'roc_curve_auc': roc_auc,
+#         'ave_precision_score': ave_precision,
+#         'data_set': 'train'
+#     }
+#     perf_dict_list.append(row_dict)
+#
+# perf_dict_df = pd.DataFrame(perf_dict_list)
+# perf_dict_df
+
+
+# # compare the performance on the train and validation set
+# uncompared_columns = ['class imbalance class 0', 'class imbalance class 1']
+# best_perf_dict_df = perf_dict_df[perf_dict_df['class_weight_name'] == 'None'].drop(columns = uncompared_columns)
+# pd.concat([best_perf_dict_df, val_perf_dict_df], ignore_index=True)
+
+def drop_least_important_attrs(results_df, threshold_percent):
+    attrs_below_threshold = {}
+
+    for metric, group in results_df.groupby('metric_name'):
+        max_importance = group['metric_mean'].max()
+        importance_threshold = threshold_percent * max_importance
+
+        # Find attrs below this threshold
+        attrs_below = group[group['metric_mean'] < importance_threshold]['feature_name'].tolist()
+        attrs_below_threshold[metric] = set(attrs_below)
+
+    # Find common attrs across all metrics
+    common_attrs = set.intersection(*attrs_below_threshold.values())
+
+    return list(common_attrs)
+
 
 def tune_hyperparameters_dt(x_df, y_df, pipe):
 

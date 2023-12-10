@@ -1,4 +1,4 @@
-## Shortlist Promising Models (11.30)
+## Shortlist Promising Models (12.4)
 
 #### Qian: SGD, decision tree, Liyang: random forest, ada boost, gradient boost
 
@@ -14,8 +14,8 @@
 
 1. Fine-tune the hyperparameters using cross validation.
     a. Treat your data transformation choices as hyperparameters. (target encoding, scaling)
-    b. Use random search over grid search. For long training runs you may want to use a Bayesian optimization approach.
-2. Try model ensemble methods. Combining your best models will often produce better results then running them individually.
+    b. Use random search over grid search. For long training runs you may want to use a Bayesian optimization approach. 
+2. Try model ensemble methods. Combining your best models will often produce better results then running them individually. (not required)
 3. Once you are confident about your final model, measure its performance on the test set to estimate the generalization error.
 
 ## Present Your Solution (12.9)
