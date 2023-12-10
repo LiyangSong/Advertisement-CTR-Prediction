@@ -244,8 +244,27 @@ def drop_least_important_attrs(results_df, threshold_percent):
 
     return list(common_attrs)
 
+def balance_class_weight(y_df):
+    balanced = y_df.shape[0] / (y_df.nunique()*np.bincount(y_df))
+    balanced_dict = \
+    dict(
+        zip(
+            y_df.unique(),
+            balanced
+        )
+    )
+    balanced_and_normalized_dict = \
+        dict(
+            zip(
+                y_df.unique(),
+                balanced/sum(balanced)
+                )
+            )
+    class_weight_options = [None,'balanced',balanced_dict,balanced_and_normalized_dict]
 
-def tune_hyperparameters_dt(x_df, y_df, pipe):
+    return class_weight_options
+
+def tune_hyperparameters_dt(x_df, y_df, pipe, class_weight_options):
 
     param_grid = {
         'preprocessor__numerical__imputer__strategy': ['mean', 'median'],
@@ -255,7 +274,8 @@ def tune_hyperparameters_dt(x_df, y_df, pipe):
         'estimator__min_samples_split': [2, 5],
         'estimator__min_samples_leaf': [1, 2],
         'estimator__max_features': [None, 'sqrt', 0.8, 1.0],
-        'estimator__splitter': ['best']
+        'estimator__splitter': ['best'],
+        'estimator__class_weight': class_weight_options
     }
 
     grid_search = GridSearchCV(estimator=pipe, param_grid=param_grid, scoring='accuracy', cv=5)
@@ -265,6 +285,8 @@ def tune_hyperparameters_dt(x_df, y_df, pipe):
     best_model = grid_search.best_estimator_
 
     return best_model
+
+
 
 def tune_hyperparameters_sgd(x_df, y_df, pipe):
 
@@ -288,89 +310,96 @@ def tune_hyperparameters_sgd(x_df, y_df, pipe):
     return best_model
         
 
-def avoiding_false_discoveries(best_model, train_cap_x_df, train_y_df, validation_cap_x_df,
-                               validation_y_df, num_samples, data_type):
+def avoiding_false_discoveries_class_helper(best_model, train_cap_x_df, train_y_df, validation_cap_x_df,
+                                            validation_y_df, num_samples):
+
     # get bootstrap sample - fit and eval on bootstrap samples
     bs_results_df = get_bootstrap_sample_class(num_samples, best_model, train_cap_x_df, train_y_df,
-                                               validation_cap_x_df, validation_y_df, data_type)
+                                               validation_cap_x_df, validation_y_df)
 
-    # get randomized target sample - fit and eval on randomized target samples
+
+    # get randomized target sample - fit and eval on randomized target samples + kde on sample
     rt_results_df = get_randomized_target_sample_class(num_samples, best_model, train_cap_x_df, train_y_df,
-                                                       validation_cap_x_df, validation_y_df, data_type)
+                                                       validation_cap_x_df, validation_y_df)
 
     # combine the results
     results_df = pd.concat([bs_results_df, rt_results_df], axis=0)
 
     # plot the histogram
-    plot_title = f'False Discovery Check using the {data_type} data set'
-    plot_null_and_alt_dist(data=results_df.drop(columns='roc_auc_score_'), x='ave_precision_score',
-                           hue='distribution', x_label=f'{data_type} ave_precision_score', y_label='Counts',
-                           title=plot_title, kde=False)
-    plot_null_and_alt_dist(data=results_df.drop(columns='ave_precision_score'), x='roc_auc_score_',
-                           hue='distribution', x_label=f'{data_type} roc_auc_score_', y_label='Counts',
-                           title=plot_title, kde=False)
-
-def get_bootstrap_sample(cap_x_df, y_df, random_state):
-    bs_df = pd.concat([cap_x_df, y_df], axis=1).sample(frac=1.0, replace=True, random_state=random_state)
-    bs_cap_x_df, bs_y_df = bs_df.iloc[:, :-1], bs_df.iloc[:, -1]
-    return bs_cap_x_df, bs_y_df
-
+    plot_title = f'false discovery check'
+    plot_null_and_alt_dist(data=results_df.drop(columns='roc_auc_score_'), x='ave_precision_score', hue='distribution',
+                           x_label= ' ave_precision_score', y_label='counts', title=plot_title,
+                           kde=False)
+    plot_null_and_alt_dist(data=results_df.drop(columns='ave_precision_score'), x='roc_auc_score_', hue='distribution',
+                           x_label= ' roc_auc_score_', y_label='counts', title=plot_title, kde=False)
+    
 def get_bootstrap_sample_class(num_samples, best_model, train_cap_x_df, train_y_df, validation_cap_x_df,
-                               validation_y_df, data_type):
+                               validation_y_df):
     df_row_dict_list = []
-    for i in range(num_samples):
+    for i in range(0, num_samples):
         bs_cap_x_df, bs_y_df = get_bootstrap_sample(train_cap_x_df, train_y_df, i)
-        
-        # Split the bootstrap sample for training and validation
-        bs_train_x, bs_val_x, bs_train_y, bs_val_y = train_test_split(bs_cap_x_df, bs_y_df, test_size=0.2, random_state=i)
-        
-        # Fit the model on the training set
-        bs_train = best_model.fit(bs_train_x, bs_train_y)
-        
-        # Evaluate on the validation set
-        roc_auc, ave_precision, y_pred = eval_class_sim(bs_val_x, bs_val_y, best_model, data_type)
-
-        df_row_dict_list.append({
-            'distribution': 'bootstrap_sample',
-            'ave_precision_score': ave_precision,
-            'roc_auc_score_': roc_auc
-        })
+        best_model.fit(bs_cap_x_df, bs_y_df)
+        ave_precision, roc_auc  = get_metrics(best_model, validation_cap_x_df, validation_y_df)
+        df_row_dict_list.append(
+            {
+                'distribution': 'bootstrap_sample',
+                'ave_precision_score': ave_precision,
+                'roc_auc_score_': roc_auc
+            }
+        )
 
     bs_results_df = pd.DataFrame(df_row_dict_list)
 
     return bs_results_df
 
-def get_randomized_target_sample(cap_x_df, y_df, random_state):
-    rt_df = pd.concat([cap_x_df, y_df], axis=1)
-    target_name = rt_df.columns[-1]
-    np.random.seed(random_state)
-    rt_df[target_name] = np.random.permutation(rt_df[target_name])
-    rt_cap_x_df, rt_y_df = rt_df.iloc[:, :-1], rt_df.iloc[:, -1]
-    return rt_cap_x_df, rt_y_df
+def get_bootstrap_sample(cap_x_df, y_df, random_state):
+
+    bs_df = pd.concat([cap_x_df, y_df], axis=1).sample(
+        # n=None,
+        frac=1.0,
+        replace=True,
+        weights=None,
+        random_state=random_state,
+        axis=0,
+        ignore_index=False
+    )
+
+    bs_cap_x_df, bs_y_df = bs_df.iloc[:, :-1], bs_df.iloc[:, -1]
+
+    return bs_cap_x_df, bs_y_df
 
 def get_randomized_target_sample_class(num_samples, best_model, train_cap_x_df, train_y_df, validation_cap_x_df,
-                                       validation_y_df, data_type):
+                                       validation_y_df):
     df_row_dict_list = []
-    for i in range(num_samples):
+    for i in range(0, num_samples):
         rt_cap_x_df, rt_y_df = get_randomized_target_sample(train_cap_x_df, train_y_df, i)
-        
-        # Fit the model on the randomized target sample
         best_model.fit(rt_cap_x_df, rt_y_df)
-        
-        # Evaluate on the validation set
-        roc_auc, ave_precision, y_pred = eval_class_sim(validation_cap_x_df, validation_y_df, best_model, data_type)
-
-        df_row_dict_list.append({
-            'distribution': 'randomized_target_sample',
-            'ave_precision_score': ave_precision,
-            'roc_auc_score_': roc_auc
-        })
+        ave_precision, roc_auc = get_metrics(best_model, validation_cap_x_df, validation_y_df)
+        df_row_dict_list.append(
+            {
+                'distribution': 'randomized_target_sample',
+                'ave_precision_score': ave_precision,
+                'roc_auc_score_': roc_auc
+            }
+        )
 
     rt_results_df = pd.DataFrame(df_row_dict_list)
 
     return rt_results_df
 
+def get_randomized_target_sample(cap_x_df, y_df, random_state):
+
+    rt_df = pd.concat([cap_x_df, y_df], axis=1)
+    target_name = rt_df.columns[-1]
+    np.random.seed(random_state)
+    rt_df[target_name] = np.random.permutation(rt_df[target_name])
+    rt_cap_x_df, rt_y_df = rt_df.iloc[:, :-1], rt_df.iloc[:, -1]
+
+    return rt_cap_x_df, rt_y_df
+
+
 def plot_null_and_alt_dist(data, x, hue, x_label='', y_label='', title='', kde=True):
+
     print('\n', '*' * 50, sep='')
     print(f'means of the distributions:')
     print(data.groupby('distribution').mean())
@@ -382,23 +411,14 @@ def plot_null_and_alt_dist(data, x, hue, x_label='', y_label='', title='', kde=T
     plt.title(title)
     plt.show()
 
-def eval_class_sim(cap_x_df, y_df, model, data_type):
-    # Assuming you have a function to evaluate your model on the validation set
-    # and return ROC AUC and average precision scores
-    # Modify this part based on your actual evaluation function
-    
-    # Assuming model has predict_proba method for calculating probabilities
-    y_pred_proba = model.predict_proba(cap_x_df)[:, 1]
-    
-    # Calculate ROC AUC and average precision
+def get_metrics(best_model, cap_x_df, y_df):
+
+    y_pred_proba = best_model.predict_proba(cap_x_df)[:, 1]
+
     roc_auc = roc_auc_score(y_df, y_pred_proba)
     ave_precision = average_precision_score(y_df, y_pred_proba)
 
-    # Assuming you want to make binary predictions based on a threshold (e.g., 0.5)
-    threshold = 0.5
-    y_pred = (y_pred_proba >= threshold).astype(int)
-
-    return roc_auc, ave_precision, y_pred
+    return roc_auc, ave_precision
 
 def print_classification_metrics_at_thresholds(model, cap_x_df, y_df, thresholds):
 
