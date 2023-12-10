@@ -154,8 +154,7 @@ def check_out_permutation_importance(estimator, cap_x_df, y_df, permutation_impo
 
         r = r_multi[metric]
         for i in r.importances_mean.argsort()[::-1]:
-            # if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
-            if r.importances_mean[i] - r.importances_std[i] > 0:  # A looser restrict allows more features shown
+            if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
 
                 feature_name = cap_x_df.columns[i]
                 mean = r.importances_mean[i]
