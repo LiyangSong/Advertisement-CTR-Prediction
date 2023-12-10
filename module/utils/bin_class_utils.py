@@ -299,8 +299,8 @@ def avoiding_false_discoveries_class_helper(best_model, train_cap_x_df, train_y_
 
     # plot the histogram
     plot_title = f'false discovery check'
-    plot_null_and_alt_dist(data=results_df.drop(columns='roc_auc_score_'), x='ave_precision_score', hue='distribution',
-                           x_label= ' ave_precision_score', y_label='counts', title=plot_title,
+    plot_null_and_alt_dist(data=results_df.drop(columns='roc_auc_score'), x='ave_precision_score', hue='distribution',
+                           x_label= 'ave_precision_score', y_label='counts', title=plot_title,
                            kde=False)
     plot_null_and_alt_dist(data=results_df.drop(columns='ave_precision_score'), x='roc_auc_score', hue='distribution',
                            x_label='roc_auc_score', y_label='counts', title=plot_title, kde=False)
@@ -391,7 +391,7 @@ def plot_null_and_alt_dist(data, x, hue, x_label='', y_label='', title='', kde=T
     plt.show()
 
 
-def print_classification_metrics_at_thresholds(cap_x_df, y_df, trained_estimator, data_set_name, cvs_scoring_list, thresholds):
+def print_classification_metrics_at_thresholds(cap_x_df, y_df, trained_estimator, thresholds):
 
     # Evaluate the model at each threshold and print metrics
     for threshold in thresholds:
