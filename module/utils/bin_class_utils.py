@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.utils import resample
 
 import module.utils.data_prepare_utils as data_prepare_utils
 from sklearn.model_selection import GridSearchCV, train_test_split, cross_val_score
@@ -13,7 +14,8 @@ from sklearn.model_selection import GridSearchCV, train_test_split, cross_val_sc
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, precision_recall_curve, average_precision_score
+from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, \
+    precision_recall_curve, average_precision_score, precision_score, recall_score
 
 from sklearn.inspection import permutation_importance
 import seaborn as sns
@@ -412,4 +414,52 @@ def plot_errors_to_threshold(best_estimator, cap_x_df, y_df, data_set_name):
     plt.legend()
     plt.title(f'{data_set_name} fp and fn errors as a function of threshold')
     plt.grid()
+    plt.show()
+
+
+def plot_model_comparisons(best_models, best_thresholds, validation_cap_x_df, validation_y_df, n_bootstrap=10):
+    metrics = {
+        'accuracy': [],
+        'precision': [],
+        'recall': [],
+        'roc_auc': []
+    }
+    model_names = []
+
+    temp_validation_cap_x_df = validation_cap_x_df.copy()
+    temp_validation_y_df = validation_y_df.copy()
+
+    for model_name, model in best_models.items():
+        threshold = best_thresholds[model_name]
+
+        for i in range(n_bootstrap):
+            # Bootstrap sampling
+            bootstrapped_cap_x_df = resample(temp_validation_cap_x_df, random_state=i)
+            bootstrapped_y_df = resample(temp_validation_y_df, random_state=i)
+
+            # Making predictions
+            y_proba = model.predict_proba(bootstrapped_cap_x_df)[:, 1]
+            y_pred = (y_proba >= threshold).astype(int)
+
+            # Calculating metrics
+            metrics['accuracy'].append(accuracy_score(bootstrapped_y_df, y_pred))
+            metrics['precision'].append(precision_score(bootstrapped_y_df, y_pred))
+            metrics['recall'].append(recall_score(bootstrapped_y_df, y_pred))
+            metrics['roc_auc'].append(roc_auc_score(bootstrapped_y_df, y_proba))
+
+        model_names.extend([model_name] * n_bootstrap)
+
+    # Creating a DataFrame for easy plotting
+    metrics_df = pd.DataFrame(metrics)
+    metrics_df['model'] = model_names
+
+    # Plotting
+    plt.figure(figsize=(15, 10))
+    for i, metric in enumerate(metrics, 1):
+        plt.subplot(2, 2, i)
+        sns.boxplot(x='model', y=metric, data=metrics_df)
+        plt.title(metric.capitalize() + ' Score Comparison')
+        plt.ylabel(metric.capitalize())
+        plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.show()
