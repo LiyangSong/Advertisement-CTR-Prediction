@@ -12,6 +12,19 @@ def sample_data(df, fraction, random_state=42):
     return sample_df
 
 
+def oversample_data(df, oversample_fraction, random_state=42):
+    print(f"\nPerform an oversample of {oversample_fraction} due to the high imbalance:")
+    oversample_label_df = df[df['label'] == '0']
+    other_label_df = df[df['label'] != '1']
+
+    oversample_label_df_sampled = oversample_label_df.sample(frac=oversample_fraction, random_state=random_state)
+
+    oversampled_df = pd.concat([oversample_label_df_sampled, other_label_df])
+
+    print(f"oversampled_df.shape: {oversampled_df.shape}")
+    return oversampled_df
+
+
 def split_train_test_df(df, target, stratify=False, test_size=0.2, random_state=42):
     print("\nSplit DataFrame into train and test set:")
 
