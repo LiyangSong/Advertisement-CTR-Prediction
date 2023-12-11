@@ -1,4 +1,4 @@
-from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import TargetEncoder
@@ -55,7 +55,7 @@ def get_default_model(estimator_name, model_random_state):
             class_weight='balanced',
             random_state=model_random_state
         ),
-        "RandomForestClassifier": DecisionTreeClassifier(
+        "RandomForestClassifier": RandomForestClassifier(
             class_weight='balanced',
             random_state=model_random_state
         ),
